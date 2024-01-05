@@ -29,6 +29,7 @@ class Hand:
         return len([1 for f in self.fingers if f])
 
 class Player:
+    inf = float("inf")
     def __init__(self, player = None):
         if player:
             self.left_hand = Hand(player.left_hand)
@@ -151,3 +152,10 @@ class Player:
             else:
                 s += "_"
         return s
+
+    def score(self, opponent, sense):
+        if opponent.checkLoss(): return Player.inf
+        if self.checkLoss(): return -Player.inf
+        AI_total = self.left_hand.fingers_up() + self.right_hand.fingers_up()
+        opp_total = opponent.left_hand.fingers_up() + opponent.right_hand.fingers_up()
+        return -opp_total * sense

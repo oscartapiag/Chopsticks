@@ -7,6 +7,7 @@ def playGame(Ai, difficulty):
         ai = AI(int(difficulty))
         turn = 0
         while True:
+
             if turn % 2 == 0:
                 print("Player Turn")
                 print(f"Player: {human.printState()}")
@@ -54,8 +55,7 @@ def playGame(Ai, difficulty):
                     break
             else:
                 print("Player 2 Turn")
-                print(f"Player "
-                      f"1: {P1.printState()}")
+                print(f"Player "f"1: {P1.printState()}")
                 print(f"Player 2: {P2.printState()}")
                 inp1 = input("l to hit left hand, r to hit right hand, s to split!")
                 inp2 = input("l to hit with your left, r to hit with your right or what hand to split!")
