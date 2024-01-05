@@ -19,6 +19,8 @@ class AI(Player):
         if depth == 0 or opponent.checkLoss() or ai.checkLoss():
             return ai.score(opponent, sense)
         possible_moves = ai.find_moves(opponent)
+        if len(possible_moves) == 0:
+            raise Exception("There should always be a possible move")
         best_move = None
         if sense == 1:
             bestScore = -AI.inf

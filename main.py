@@ -7,7 +7,6 @@ def playGame(Ai, difficulty):
         ai = AI(int(difficulty))
         turn = 0
         while True:
-
             if turn % 2 == 0:
                 print("Player Turn")
                 print(f"Player: {human.printState()}")
@@ -75,7 +74,7 @@ def main():
     AI = input("")
     if AI == "y":
         b = True
-        difficulty = input("Select difficulty, 1 | 2 | 3 | 4")
+        difficulty = input("Select difficulty, 1 | 2 | 3 | 4 (Bigger numer is harder)")
     else:
         difficulty = None
         b = False
