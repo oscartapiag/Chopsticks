@@ -154,8 +154,8 @@ class Player:
         return s
 
     def score(self, opponent, sense):
-        if opponent.checkLoss(): return -1e99
-        if self.checkLoss(): return 1e99
+        if opponent.checkLoss(): return 1e99 * sense
+        if self.checkLoss(): return -1e99 * sense
         AI_total = self.left_hand.fingers_up() + self.right_hand.fingers_up()
         opp_total = opponent.left_hand.fingers_up() + opponent.right_hand.fingers_up()
         return (AI_total-opp_total) * sense
