@@ -74,11 +74,11 @@ def main():
     AI = input("")
     if AI == "y":
         b = True
-        difficulty = input("Select difficulty, 1 | 2 | 3 | 4 (Bigger numer is harder)")
+        #difficulty = input("Select difficulty, 1 | 2 | 3 | 4 (Bigger numer is harder)")
     else:
         difficulty = None
         b = False
-    playGame(b, difficulty)
+    playGame(b, 10)
 
 if __name__ == '__main__':
     main()
