@@ -78,7 +78,7 @@ def main():
     else:
         difficulty = None
         b = False
-    playGame(b, 10)
+    playGame(b, 5)
 
 if __name__ == '__main__':
     main()
