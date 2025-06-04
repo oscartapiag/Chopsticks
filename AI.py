@@ -35,20 +35,20 @@ class AI(Player):
                     alpha = max(alpha, bestScore)
                     best_move = move
                     if beta <= alpha:
-                        return bestScore
+                        break
         else:
             bestScore = AI.inf
             for move in possible_moves:
                 AI_copy = AI(self.DEPTH, ai)
                 opponent_copy = Player(opponent)
                 AI_copy.make_move(opponent_copy, move, None)
-                score = self.min_max(AI_copy, opponent_copy, depth - 1, 1, False, alpha, beta)
+                score = self.min_max(opponent_copy, AI_copy, depth - 1, 1, False, alpha, beta)
                 if score < bestScore:
                     bestScore = score
                     beta = min(beta, bestScore)
                     best_move = move
                     if beta <= alpha:
-                        return bestScore
+                        break
         if save_move:
             self.lastMove = best_move
         return bestScore

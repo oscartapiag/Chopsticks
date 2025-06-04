@@ -71,11 +71,15 @@ def playGame(Ai, difficulty):
 
 def main():
     print("AI? y/n")
-    AI = input("")
-    if AI == "y":
-        b = True
-    else:
-        b = False
+    b = None
+    while not b:
+        AI = input("")
+        if AI == "y":
+            b = True
+        elif AI == "n":
+            b = False
+        else:
+            print("Invalid input, please try again!")
     playGame(b, 5)
 
 if __name__ == '__main__':
