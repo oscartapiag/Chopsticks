@@ -1,1 +1,1 @@
-No GUI, but you can play in the terminal by running main.py
+To run CLI run main.py to run GUI run gui.py
