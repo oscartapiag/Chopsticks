@@ -202,8 +202,6 @@ class ChopsticksGUI:
                     self.selected_hand = None # Deselect
                     self.refresh()
                 else:
-                    # Split: "s" + source
-                    self.attempt_move("s" + source, f"Split {source.upper()} to {target.upper()}")
                     # Try Split
                     print(f"[DEBUG] Attempting Split {source}->{target}")
                     try:
@@ -243,7 +241,6 @@ class ChopsticksGUI:
         except Exception as e:
             print(f"[DEBUG] Move failed: {e}")
             self.log(f"Invalid move: {e}")
-            self.selected_hand = None
             # Do not deselect on failure, allows user to retry easily
             self.refresh()
 
@@ -265,10 +262,10 @@ class ChopsticksGUI:
         if w is not None:
             self.game_over = True
             if w == 0:
-                self.status_lbl.config(text="YOU WIN! 🎉", fg=COLORS["select"])
+                self.status_lbl.config(text="YOU WIN!", fg=COLORS["select"])
                 self.sub_status_lbl.config(text="Congratulations!")
             else:
-                self.status_lbl.config(text="AI WINS 💀", fg=COLORS["ai"])
+                self.status_lbl.config(text="AI WINS", fg=COLORS["ai"])
                 self.sub_status_lbl.config(text="Better luck next time.")
 
     def reset_game(self):

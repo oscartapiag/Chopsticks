@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chopsticks Pro</title> <!-- Matches gui.py title -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <main class="game-container">
+        <header>
+            <div id="status-bar" class="status-lbl">Your Turn</div>
+            <div id="sub-status" class="sub-status-lbl">Select a hand to move</div>
+        </header>
+
+        <div class="game-frame">
+            <!-- AI OPPONENT -->
+            <div class="player-zone">
+                <div class="zone-label ai-text">AI (Opponent)</div>
+                <div class="hands-container">
+                    <canvas id="cv-ai-l" width="120" height="120" class="hand-canvas"
+                        onclick="handleCanvasClick('ai', 'l')"></canvas>
+                    <canvas id="cv-ai-r" width="120" height="120" class="hand-canvas"
+                        onclick="handleCanvasClick('ai', 'r')"></canvas>
+                </div>
+            </div>
+
+            <!-- VS -->
+            <div class="vs-label">VS</div>
+
+            <!-- HUMAN -->
+            <div class="player-zone">
+                <div class="zone-label human-text">YOU</div>
+                <div class="hands-container">
+                    <canvas id="cv-human-l" width="120" height="120" class="hand-canvas"
+                        onclick="handleCanvasClick('human', 'l')"></canvas>
+                    <canvas id="cv-human-r" width="120" height="120" class="hand-canvas"
+                        onclick="handleCanvasClick('human', 'r')"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-frame">
+            <div id="log-box" class="log-text"></div>
+            <button id="btn-reset" class="btn-reset" onclick="resetGame()">New Game</button>
+        </div>
+    </main>
+
+    <script src="/static/game.js"></script>
+</body>
+
+</html>

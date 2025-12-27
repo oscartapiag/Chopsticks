@@ -1,0 +1,148 @@
+:root {
+    --bg: #1E1E2E;
+    --fg: #CDD6F4;
+    --human: #89B4FA;
+    --ai: #F38BA8;
+    --finger: #F9E2AF;
+    /* Used in JS canvas drawing */
+    --empty: #313244;
+    --select: #A6E3A1;
+    --btn-bg: #45475A;
+    --btn-fg: #FFFFFF;
+
+    --font-main: "Helvetica", "Roboto", sans-serif;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    /* Mimic window height */
+    margin: 0;
+}
+
+.game-container {
+    width: 600px;
+    height: 800px;
+    /* Match gui.py geometry="600x800" */
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+    /* Optional: minimal border to show window edge if in full browser */
+    background-color: var(--bg);
+}
+
+/* Header */
+header {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.status-lbl {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--human);
+    /* Default to human color */
+}
+
+.sub-status-lbl {
+    font-size: 16px;
+    /* slightly larger than 12 for web readability */
+    color: var(--fg);
+    margin-top: 5px;
+}
+
+/* Game Frame */
+.game-frame {
+    flex: 1;
+    /* expand=True */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Center content vertically */
+}
+
+.player-zone {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.zone-label {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.ai-text {
+    color: var(--ai);
+}
+
+.human-text {
+    color: var(--human);
+}
+
+.hands-container {
+    display: flex;
+    gap: 0;
+    /* Canvases have padding/margin, mimicking pack(padx=20) */
+    justify-content: center;
+}
+
+.hand-canvas {
+    background-color: var(--bg);
+    margin: 0 20px;
+    /* pack side=left, padx=20 */
+    cursor: pointer;
+}
+
+.vs-label {
+    font-size: 14px;
+    font-style: italic;
+    color: #585B70;
+    margin: 10px 0;
+}
+
+/* Controls Frame */
+.controls-frame {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.log-text {
+    height: 100px;
+    /* Height approx 5 lines */
+    background-color: #181825;
+    color: var(--fg);
+    font-family: "Consolas", monospace;
+    font-size: 14px;
+    padding: 10px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    border: none;
+    white-space: pre-wrap;
+}
+
+.btn-reset {
+    background-color: var(--select);
+    color: var(--bg);
+    font-family: var(--font-main);
+    font-size: 12px;
+    /* Font size 12 from py */
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+    align-self: center;
+    /* Center button */
+}
+
+.btn-reset:hover {
+    opacity: 0.9;
+}
