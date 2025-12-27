@@ -1,23 +1,13 @@
 class Hand:
     def __init__(self, hand = None):
         if hand:
-            self.fingers = hand.fingers[:]
+            self.fingers = hand.fingers
         else:
-            self.fingers = [True] + 4 * [False]
+            self.fingers = 1
 
     def update_hand(self, num):
-        if num == 0:
-            self.fingers = 5 * [False]
-        elif num == 1:
-            self.fingers = [True] + 4 * [False]
-        elif num == 2:
-            self.fingers = 2 * [True] + 3 * [False]
-        elif num == 3:
-            self.fingers = 3 * [True] + 2 * [False]
-        elif num == 4:
-            self.fingers = 4 * [True] + [False]
-        elif num == 5:
-            self.fingers = 5 * [True]
+        if 0 <= num <= 5:
+            self.fingers = num
         else:
             raise Exception("Invalid number of fingers")
 
@@ -26,7 +16,12 @@ class Hand:
         self.update_hand(total_fingers)
 
     def fingers_up(self):
-        return len([1 for f in self.fingers if f])
+        return self.fingers
+    
+    def printState(self):
+        return "|" * self.fingers + "_" * (5 - self.fingers)
+
+
 
 class Player:
     inf = float("inf")
@@ -140,17 +135,9 @@ class Player:
 
     def printState(self):
         s = ""
-        for finger in self.left_hand.fingers:
-            if finger:
-                s += "|"
-            else:
-                s += "_"
+        s += self.left_hand.printState()
         s += "   "
-        for finger in self.right_hand.fingers:
-            if finger:
-                s += "|"
-            else:
-                s += "_"
+        s += self.right_hand.printState()
         return s
 
     def score(self, opponent, sense, winning_val):

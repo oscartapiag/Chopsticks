@@ -1,239 +1,287 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import font
 from game import Game
 
-# ─── COLOURS ───────────────────────────────────────────────────────────────
-DARK_BG  = "#2b2b2b"
-LIGHT_FG = "#ffffff"
-
-BTN_BG        = "#3d3d3d"
-BTN_BG_ACTIVE = "#555555"
-
-# ─── ONE “FINGER” RECTANGLE ────────────────────────────────────────────────
-RECT_W, RECT_H = 20, 10
-GAP            = 4
-
-
-def draw_fingers(canvas: tk.Canvas, n: int) -> None:
-    """Draw n (0–4) vertical rectangles, bottom-aligned inside the canvas."""
-    canvas.delete("all")
-    total_h = 4 * RECT_H + 3 * GAP
-    x0 = (canvas.winfo_width()  - RECT_W) // 2
-    y0 = (canvas.winfo_height() - total_h) // 2
-    for i in range(n):  # draw bottom-up
-        y = y0 + total_h - (i + 1) * (RECT_H + GAP) + GAP
-        canvas.create_rectangle(
-            x0, y, x0 + RECT_W, y + RECT_H,
-            fill=LIGHT_FG, outline=LIGHT_FG
-        )
-
+# ─── THEME CONFIGURATION ───────────────────────────────────────────────────
+COLORS = {
+    "bg":      "#1E1E2E",  # Dark background
+    "fg":      "#CDD6F4",  # Light text
+    "human":   "#89B4FA",  # Blue for player
+    "ai":      "#F38BA8",  # Red for AI
+    "finger":  "#F9E2AF",  # Yellow/Peach for active fingers
+    "empty":   "#313244",  # Dark grey for empty slots
+    "select":  "#A6E3A1",  # Green highlight
+    "btn_bg":  "#45475A",
+    "btn_fg":  "#FFFFFF"
+}
 
 class ChopsticksGUI:
     def __init__(self, root: tk.Tk):
         self.root = root
-        root.title("Chopsticks")
+        self.root.title("Chopsticks Pro")
+        self.root.geometry("600x800")
+        self.root.configure(bg=COLORS["bg"])
 
-        # — global dark-mode defaults —
-        root.configure(bg=DARK_BG)
-        for opt, val in (
-            ("*background", DARK_BG),
-            ("*foreground", LIGHT_FG),
-            ("*insertBackground", LIGHT_FG),
-        ):
-            root.option_add(opt, val)
-
-        # — ttk button style —
-        style = ttk.Style(root)
-        style.theme_use("clam")
-        style.configure(
-            "Move.TButton",
-            foreground=LIGHT_FG,
-            background=BTN_BG,
-            borderwidth=0,
-            padding=6,
-        )
-        style.map(
-            "Move.TButton",
-            foreground=[("active", LIGHT_FG)],
-            background=[("active", BTN_BG_ACTIVE)],
-        )
-
-        # create initial game state
+        # Game State
         self.game = Game(vs_ai=True, depth=5)
+        self.selected_hand = None  # None or 'l' or 'r' (Player's hand)
+        self.game_over = False
 
-        # ─ GRID LAYOUT (no overlaps) ────────────────────────────────────
-        root.columnconfigure(0, weight=1)  # single stretchable column
+        # Fonts
+        self.font_main = font.Font(family="Helvetica", size=16, weight="bold")
+        self.font_sub = font.Font(family="Helvetica", size=12)
 
-        # status label (row 0)
-        self.status = tk.Label(root, font=("Helvetica", 14))
-        self.status.grid(row=0, column=0, pady=(6, 2), sticky="n")
-
-        # two fixed-height rows for hands: human (row 1) and AI (row 2)
-        self._hand_row(row=1, is_human=True)
-        self._hand_row(row=2, is_human=False)
-
-        # move-button strip (row 3)
-        self.btn_frame = tk.Frame(root, bg=DARK_BG)
-        self.btn_frame.grid(row=3, column=0, pady=8)
-
-        # allow only the log row (row 4) to absorb extra vertical space
-        root.rowconfigure(4, weight=1)
-
-        # log box (row 4)
-        self.log = tk.Text(
-            root,
-            height=7,
-            width=46,
-            state="disabled",
-            bg="#444444",
-            fg=LIGHT_FG,
-            insertbackground=LIGHT_FG,
-        )
-        self.log.grid(
-            row=4, column=0, pady=(0, 4), padx=4, sticky="nsew"
-        )
-
-        # “Play Again” button (row 5)
-        self.play_again_btn = ttk.Button(
-            root,
-            text="Play Again",
-            style="Move.TButton",
-            command=self.play_again
-        )
-        self.play_again_btn.grid(row=5, column=0, pady=(0, 8))
-
-        # build the initial UI state
+        # Layout
+        self._setup_layout()
         self.refresh()
-        root.mainloop()
 
-    # ────────────────────────────────────────────────────────────────────
-    def _hand_row(self, row: int, *, is_human: bool):
-        """
-        Build a single row (60 px tall) containing two canvases side-by-side.
-        is_human=True → top row; False → AI row.
-        """
-        frame = tk.Frame(self.root, bg=DARK_BG, height=60)
-        frame.grid(row=row, column=0, pady=4, sticky="n")
-        frame.grid_propagate(False)  # freeze at 60 px
-
-        canv_l = tk.Canvas(
-            frame, width=60, height=60,
-            bg=DARK_BG, highlightthickness=0
+    def _setup_layout(self):
+        # 1. Header / Status
+        self.header_frame = tk.Frame(self.root, bg=COLORS["bg"])
+        self.header_frame.pack(pady=20, fill="x")
+        
+        self.status_lbl = tk.Label(
+            self.header_frame, text="Your Turn", 
+            font=("Helvetica", 24, "bold"), bg=COLORS["bg"], fg=COLORS["human"]
         )
-        canv_r = tk.Canvas(
-            frame, width=60, height=60,
-            bg=DARK_BG, highlightthickness=0
+        self.status_lbl.pack()
+
+        self.sub_status_lbl = tk.Label(
+            self.header_frame, text="Select a hand to move",
+            font=self.font_sub, bg=COLORS["bg"], fg=COLORS["fg"]
         )
-        canv_l.pack(side="left", padx=20)
-        canv_r.pack(side="left", padx=20)
+        self.sub_status_lbl.pack(pady=5)
 
-        # prevent the canvases from growing larger than 60×60
-        canv_l.pack_propagate(False)
-        canv_r.pack_propagate(False)
+        # 2. Game Area (Canvas)
+        self.game_frame = tk.Frame(self.root, bg=COLORS["bg"])
+        self.game_frame.pack(expand=True, fill="both", padx=20)
 
+        # AI Hands (Top)
+        self.ai_frame = tk.Frame(self.game_frame, bg=COLORS["bg"])
+        self.ai_frame.pack(pady=20)
+        
+        tk.Label(self.ai_frame, text="AI (Opponent)", font=self.font_main, bg=COLORS["bg"], fg=COLORS["ai"]).pack(pady=(0, 10))
+        
+        self.ai_hands_container = tk.Frame(self.ai_frame, bg=COLORS["bg"])
+        self.ai_hands_container.pack()
+        
+        self.cv_ai_l = self._create_hand_canvas(self.ai_hands_container, "ai_l")
+        self.cv_ai_r = self._create_hand_canvas(self.ai_hands_container, "ai_r")
+
+        # Spacer / VS
+        tk.Label(self.game_frame, text="VS", font=("Helvetica", 14, "italic"), bg=COLORS["bg"], fg="#585B70").pack(pady=10)
+
+        # Human Hands (Bottom)
+        self.human_frame = tk.Frame(self.game_frame, bg=COLORS["bg"])
+        self.human_frame.pack(pady=20)
+        
+        tk.Label(self.human_frame, text="YOU", font=self.font_main, bg=COLORS["bg"], fg=COLORS["human"]).pack(pady=(0, 10))
+        
+        self.human_hands_container = tk.Frame(self.human_frame, bg=COLORS["bg"])
+        self.human_hands_container.pack()
+
+        self.cv_human_l = self._create_hand_canvas(self.human_hands_container, "human_l")
+        self.cv_human_r = self._create_hand_canvas(self.human_hands_container, "human_r")
+
+        # 3. Controls / Log
+        self.controls_frame = tk.Frame(self.root, bg=COLORS["bg"])
+        self.controls_frame.pack(side="bottom", fill="x", pady=20, padx=20)
+
+        self.log_text = tk.Text(self.controls_frame, height=5, bg="#181825", fg=COLORS["fg"], 
+                                font=("Consolas", 10), relief="flat", state="disabled")
+        self.log_text.pack(fill="x", pady=(0, 10))
+
+        self.btn_reset = tk.Button(
+            self.controls_frame, text="New Game", command=self.reset_game,
+            bg=COLORS["select"], fg=COLORS["bg"], font=self.font_sub,
+            highlightbackground=COLORS["select"],
+            relief="flat", padx=20, pady=10, activebackground=COLORS["human"]
+        )
+        self.btn_reset.pack()
+
+    def _create_hand_canvas(self, parent, tag):
+        cv = tk.Canvas(parent, width=120, height=120, bg=COLORS["bg"], highlightthickness=0)
+        cv.pack(side="left", padx=20)
+        # Bind click
+        cv.bind("<Button-1>", lambda e, t=tag: self.on_hand_click(t))
+        return cv
+
+    def draw_hand(self, canvas, fingers, is_human, is_selected):
+        canvas.delete("all")
+        w, h = 120, 120
+        cx = w // 2
+
+        # Orientation: Human hands at bottom pointing up, AI at top pointing down
         if is_human:
-            self.canvas_you_L, self.canvas_you_R = canv_l, canv_r
+            cy = h - 35
+            dy = -1
         else:
-            self.canvas_ai_L, self.canvas_ai_R = canv_l, canv_r
+            cy = 35
+            dy = 1
 
-    # ────────────────────────────────────────────────────────────────────
-    def refresh(self) -> None:
-        """Redraw all bones of the UI for the current game state."""
-        # draw finger-count rectangles
-        draw_fingers(self.canvas_you_L, self.game.left(0))
-        draw_fingers(self.canvas_you_R, self.game.right(0))
-        draw_fingers(self.canvas_ai_L,  self.game.left(1))
-        draw_fingers(self.canvas_ai_R,  self.game.right(1))
+        # Colors
+        base_color = COLORS["human"] if is_human else COLORS["ai"]
+        palm_fill = COLORS["select"] if is_selected else base_color
+        finger_fill = COLORS["finger"]
 
-        # update status label
-        self.status["text"] = (
-            "Your turn" if self.game.turn == 0 else "AI thinking…"
-        )
+        # 1. Draw Fingers (behind palm)
+        # Calculate offsets to center the fingers
+        offsets = []
+        if fingers == 1: offsets = [0]
+        elif fingers == 2: offsets = [-12, 12]
+        elif fingers == 3: offsets = [-20, 0, 20]
+        elif fingers == 4: offsets = [-28, -10, 10, 28]
 
-        # (re)build the move buttons for the human turn
-        for w in self.btn_frame.winfo_children():
-            w.destroy()
+        for off in offsets:
+            x = cx + off
+            # Start inside the palm, extend out
+            canvas.create_line(x, cy, x, cy + (dy * 50), 
+                               width=14, fill=finger_fill, capstyle=tk.ROUND)
+        
+        # 2. Draw Palm (Circle on top)
+        r = 30
+        canvas.create_oval(cx-r, cy-r, cx+r, cy+r, outline=base_color, width=3, fill=palm_fill)
+
+        # Text count
+        canvas.create_text(cx, cy, text=str(fingers), fill=COLORS["bg"], font=("Helvetica", 16, "bold"))
+
+    def refresh(self):
+        # Get states
+        h_l = self.game.left(0)
+        h_r = self.game.right(0)
+        a_l = self.game.left(1)
+        a_r = self.game.right(1)
+
+        # Draw
+        self.draw_hand(self.cv_human_l, h_l, True, self.selected_hand == 'l')
+        self.draw_hand(self.cv_human_r, h_r, True, self.selected_hand == 'r')
+        self.draw_hand(self.cv_ai_l, a_l, False, False)
+        self.draw_hand(self.cv_ai_r, a_r, False, False)
+
+        # Status
+        if self.game_over: return
 
         if self.game.turn == 0:
-            for mv in dict.fromkeys(self.game.legal_moves()):
-                lbl = "Split" if mv.lower().startswith("s") else mv.upper()
-                # capture mv in a default arg so each button has its own command
-                ttk.Button(
-                    self.btn_frame,
-                    text=lbl,
-                    style="Move.TButton",
-                    command=lambda m=mv: self.play_human(m)
-                ).pack(side="left", padx=3)
+            self.status_lbl.config(text="Your Turn", fg=COLORS["human"])
+            if self.selected_hand:
+                self.sub_status_lbl.config(text="Select a target to attack or split")
+            else:
+                self.sub_status_lbl.config(text="Select your hand")
+        else:
+            self.status_lbl.config(text="AI Thinking...", fg=COLORS["ai"])
+            self.sub_status_lbl.config(text="Please wait")
 
-    # ────────────────────────────────────────────────────────────────────
-    def play_human(self, move: str) -> None:
-        """Called when the human clicks a move-button."""
-        self.log_line(f"You → {move}")
-        self.game.apply_move(move)
-        self.game.next_turn()
-        if self.check_end():
-            return
-        self.refresh()
-        # let the UI update before the AI thinks
-        self.root.after(100, self.play_ai)
+    def log(self, msg):
+        self.log_text.config(state="normal")
+        self.log_text.insert("end", f"> {msg}\n")
+        self.log_text.see("end")
+        self.log_text.config(state="disabled")
 
-    def play_ai(self) -> None:
-        """Invoke the AI’s move and update the UI."""
-        mv = self.game.ai_move()
-        self.log_line(f"AI → {mv}")
-        self.game.apply_move(mv)
-        self.game.next_turn()
-        if self.check_end():
-            return
-        self.refresh()
+    def on_hand_click(self, tag):
+        if self.game.turn != 0 or self.game_over: return
 
-    # ────────────────────────────────────────────────────────────────────
-    def log_line(self, txt: str) -> None:
-        """Append a line of text to the log box."""
-        self.log.config(state="normal")
-        self.log.insert("end", txt + "\n")
-        self.log.see("end")
-        self.log.config(state="disabled")
+        owner, side = tag.split('_') # owner="human"|"ai", side="l"|"r"
+        print(f"[DEBUG] Clicked: {tag} | Current Selection: {self.selected_hand}")
+        
+        if self.selected_hand is None:
+            if owner == "ai":
+                self.log("Select your own hand first!")
+                return
+            fingers = self.game.left(0) if side == 'l' else self.game.right(0)
+            if fingers == 0:
+                self.log("Cannot select empty hand.")
+                return
+            self.selected_hand = side
+            self.refresh()
+        else:
+            source = self.selected_hand
+            target = side
+            if owner == "human":
+                if source == target:
+                    print(f"[DEBUG] Deselecting {source}")
+                    self.selected_hand = None # Deselect
+                    self.refresh()
+                else:
+                    # Split: "s" + source
+                    self.attempt_move("s" + source, f"Split {source.upper()} to {target.upper()}")
+                    # Try Split
+                    print(f"[DEBUG] Attempting Split {source}->{target}")
+                    try:
+                        self.game.apply_move("s" + source)
+                        self.log(f"You: Split {source.upper()} to {target.upper()}")
+                        self.selected_hand = None
+                        self.game.next_turn()
+                        self.refresh()
+                        self.check_win()
+                        if not self.game_over:
+                            self.root.after(800, self.ai_turn)
+                    except Exception as e:
+                        print(f"[DEBUG] Split failed: {e}")
+                        # If split failed (e.g. 2 hands alive), switch selection to the clicked hand if it has fingers
+                        fingers = self.game.left(0) if target == 'l' else self.game.right(0)
+                        if fingers > 0:
+                            print(f"[DEBUG] Switching selection to {target}")
+                            self.selected_hand = target
+                        else:
+                            self.log(f"Invalid move: {e}")
+                        self.refresh()
+            else:
+                # Attack: source + target
+                print(f"[DEBUG] Attempting Hit {source}->{target}")
+                self.attempt_move(target + source, f"Hit {source.upper()} -> {target.upper()}")
 
-    def check_end(self) -> bool:
-        """
-        Check if someone has won. If so, disable move buttons
-        and leave a message. Return True if the game is over.
-        """
-        winner = self.game.winner()
-        if winner is not None:
-            self.status["text"] = (
-                "You win! 🎉" if winner == 0 else "AI wins 😢"
-            )
-            for b in self.btn_frame.winfo_children():
-                b.config(state="disabled")
-            return True
-        return False
+    def attempt_move(self, move, desc):
+        try:
+            self.game.apply_move(move)
+            self.log(f"You: {desc}")
+            self.selected_hand = None
+            self.game.next_turn()
+            self.refresh()
+            self.check_win()
+            if not self.game_over:
+                self.root.after(800, self.ai_turn)
+        except Exception as e:
+            print(f"[DEBUG] Move failed: {e}")
+            self.log(f"Invalid move: {e}")
+            self.selected_hand = None
+            # Do not deselect on failure, allows user to retry easily
+            self.refresh()
 
-    # ────────────────────────────────────────────────────────────────────
-    def play_again(self) -> None:
-        """
-        Reset the game to a fresh state:
-        • new backend Game()
-        • clear the log
-        • rebuild buttons & hands
-        """
-        # 1) Recreate game instance
+    def ai_turn(self):
+        if self.game_over: return
+        try:
+            move = self.game.ai_move()
+            self.game.apply_move(move)
+            desc = f"Split {move[1].upper()}" if move[0] == 's' else f"Hit {move[0].upper()} -> {move[1].upper()}"
+            self.log(f"AI: {desc}")
+            self.game.next_turn()
+            self.refresh()
+            self.check_win()
+        except Exception as e:
+            self.log(f"AI Error: {e}")
+
+    def check_win(self):
+        w = self.game.winner()
+        if w is not None:
+            self.game_over = True
+            if w == 0:
+                self.status_lbl.config(text="YOU WIN! 🎉", fg=COLORS["select"])
+                self.sub_status_lbl.config(text="Congratulations!")
+            else:
+                self.status_lbl.config(text="AI WINS 💀", fg=COLORS["ai"])
+                self.sub_status_lbl.config(text="Better luck next time.")
+
+    def reset_game(self):
         self.game = Game(vs_ai=True, depth=5)
-
-        # 2) Clear the log box
-        self.log.config(state="normal")
-        self.log.delete("1.0", "end")
-        self.log.config(state="disabled")
-
-        # 3) Re-enable move buttons (if they were disabled at game-end)
-        for b in self.btn_frame.winfo_children():
-            b.config(state="normal")
-
-        # 4) Refresh the entire UI
+        self.selected_hand = None
+        self.game_over = False
+        self.log_text.config(state="normal")
+        self.log_text.delete("1.0", "end")
+        self.log_text.config(state="disabled")
+        self.log("Game Started.")
         self.refresh()
 
-
-# ── run directly ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    ChopsticksGUI(tk.Tk())
+    root = tk.Tk()
+    app = ChopsticksGUI(root)
+    root.mainloop()
