@@ -2,6 +2,8 @@
 
 A Python implementation of the classic hand game **Chopsticks**, featuring a graphical user interface (GUI) and an unbeatable AI opponent using the Minimax algorithm.
 
+Now with website to play online: https://web-production-7e4d6.up.railway.app/
+
 ## Features
 
 - **Two Modes**: Play via a modern GUI or a classic Command Line Interface (CLI).
