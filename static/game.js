@@ -57,10 +57,14 @@ function updateUI(data) {
             statusLbl.textContent = "YOU WIN!";
             statusLbl.style.color = COLORS.select;
             subLbl.textContent = "Congratulations!";
-        } else {
+        } else if (data.winner === 1) {
             statusLbl.textContent = "AI WINS";
             statusLbl.style.color = COLORS.ai;
             subLbl.textContent = "Better luck next time.";
+        } else if (data.winner === -1) {
+            statusLbl.textContent = "GAME TIED";
+            statusLbl.style.color = COLORS.finger;
+            subLbl.textContent = "Both players have equal fingers in loop.";
         }
         return;
     }

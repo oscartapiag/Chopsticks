@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chopsticks - Rules & Setup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .home-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .rules-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: left;
+            margin: 30px 0;
+            line-height: 1.6;
+        }
+
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="home-container">
+        <h1 style="color: var(--human); font-size: 3rem;">CHOPSTICKS</h1>
+
+        <div class="rules-box">
+            <h3 style="margin-top: 0;">How to Play</h3>
+            <ul>
+                <li><strong>Goal</strong>: Eliminate both of your opponent's hands (make them 0).</li>
+                <li><strong>Attack</strong>: Tap your hand against an opponent's to add your finger count to theirs (mod
+                    5).</li>
+                <li><strong>Split</strong>: If you have two even hands (e.g. 2 and 0, or 4 and 0), you can split them
+                    (e.g. into 1 and 1, or 2 and 2).</li>
+                <li><strong>Tie-Breaker</strong>: If the game loops indefinitely, the player with the MOST fingers wins.
+                </li>
+            </ul>
+        </div>
+
+        <h2>Select Difficulty</h2>
+        <div class="difficulty-grid">
+            <button class="btn-reset" onclick="startGame(1)">Easy</button>
+            <button class="btn-reset" onclick="startGame(3)">Medium</button>
+            <button class="btn-reset" onclick="startGame(5)">Hard</button>
+            <button class="btn-reset" onclick="startGame(7)">Impossible</button>
+        </div>
+    </div>
+
+    <script>
+        async function startGame(depth) {
+            const res = await fetch('/api/new_game', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ depth: depth })
+            });
+            if (res.ok) {
+                window.location.href = '/game';
+            }
+        }
+    </script>
+</body>
+
+</html>

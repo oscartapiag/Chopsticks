@@ -143,9 +143,21 @@ class Player:
     def score(self, opponent, sense, winning_val):
         if opponent.checkLoss(): return winning_val * sense
         if self.checkLoss(): return -winning_val * sense
+
         my_hands = self.hands_up()
         opp_hands = opponent.hands_up()
         my_total = self.left_hand.fingers_up() + self.right_hand.fingers_up()
         opp_total = opponent.left_hand.fingers_up() + opponent.right_hand.fingers_up()
-        value = (20 * (my_hands - opp_hands)) + (2 * (my_total - opp_total))
+        
+        base_score = 15 * (my_hands - opp_hands)
+        
+        finger_score = 2 * (my_total - opp_total)
+        
+        my_diff = abs(self.left_hand.fingers_up() - self.right_hand.fingers_up())
+        balance_bonus = 0
+        if my_hands == 2:
+            balance_bonus += (5 - my_diff)
+            
+        value = base_score + finger_score + balance_bonus
+        
         return value * sense

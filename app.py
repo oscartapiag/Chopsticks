@@ -114,22 +114,47 @@ def trigger_ai(request: Request, session_id: Optional[str] = Cookie(None)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class GameConfig(BaseModel):
+    depth: int
+
+@app.post("/api/new_game")
+def new_game(config: GameConfig, response: Response, session_id: Optional[str] = Cookie(None)):
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response.set_cookie(key="session_id", value=session_id)
+    
+    games[session_id] = Game(vs_ai=True, depth=config.depth)
+    return {"status": "created"}
+
 @app.post("/api/reset")
 def reset_game(response: Response, session_id: Optional[str] = Cookie(None)):
-    if session_id:
-        games[session_id] = Game(vs_ai=True)
+    if session_id and session_id in games:
+        # Keep same difficulty? We need to store it or default to 5
+        # For simple reset, lets stick to default 5 or reuse existing attr if we had it
+        # Actually, let's just make reset restart the CURRENT game logic
+        # But Game class init resets state. 
+        # We should probably store depth in Game instance? 
+        # stick.py Player doesn't store depth. AI.py does.
+        # AI(difficulty) sets self.DEPTH
+        # Let's peek at existing game's AI depth
+        old_game = games[session_id]
+        depth = old_game.ai.DEPTH if hasattr(old_game.ai, 'DEPTH') else 5
+        games[session_id] = Game(vs_ai=True, depth=depth)
     return {"status": "reset"}
 
 # -----------------------------------------------------------------------------
-# Static Files
+# Static Files & Views
 # -----------------------------------------------------------------------------
 
-# Create static dir if not exists (handled by tool usually, but good to be safe)
 if not os.path.exists("static"):
     os.makedirs("static")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
-async def read_index():
+async def read_home():
+    return FileResponse('templates/home.html')
+
+@app.get("/game")
+async def read_game():
     return FileResponse('templates/index.html')
