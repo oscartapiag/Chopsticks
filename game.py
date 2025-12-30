@@ -54,8 +54,8 @@ class Game:
             h_total = self.human.left_hand.fingers_up() + self.human.right_hand.fingers_up()
             a_total = self.ai.left_hand.fingers_up() + self.ai.right_hand.fingers_up()
             
-            if h_total > a_total: return 0  # Human wins due to more material
-            if a_total > h_total: return 1  # AI wins
+            if h_total > a_total: return 2  # Human wins (Stalemate)
+            if a_total > h_total: return 3  # AI wins (Stalemate)
             return -1 # True Tie (rare)
             
         return None
@@ -63,4 +63,6 @@ class Game:
     def checkStalemate(self):
         if not self.history: return False
         current_state = self.history[-1]
-        return self.history.count(current_state) >= 3
+        # Only look at the last 16 moves (approx 4 moves/loop * 3 reps + buffer)
+        recent_history = self.history[-16:]
+        return recent_history.count(current_state) >= 3

@@ -57,11 +57,19 @@ function updateUI(data) {
             statusLbl.textContent = "YOU WIN!";
             statusLbl.style.color = COLORS.select;
             subLbl.textContent = "Congratulations!";
-        } else if (data.winner === 1) {
+        } else if (data.winner === 1 || data.winner === 'ai') {
             statusLbl.textContent = "AI WINS";
             statusLbl.style.color = COLORS.ai;
             subLbl.textContent = "Better luck next time.";
-        } else if (data.winner === -1) {
+        } else if (data.winner === 'human_stalemate') {
+            statusLbl.textContent = "YOU WIN (BY RULES)";
+            statusLbl.style.color = COLORS.select;
+            subLbl.textContent = "Loop detected. You had more fingers.";
+        } else if (data.winner === 'ai_stalemate') {
+            statusLbl.textContent = "AI WINS (BY RULES)";
+            statusLbl.style.color = COLORS.ai;
+            subLbl.textContent = "Loop detected. AI had more fingers.";
+        } else if (data.winner === -1 || data.winner === 'draw') {
             statusLbl.textContent = "GAME TIED";
             statusLbl.style.color = COLORS.finger;
             subLbl.textContent = "Both players have equal fingers in loop.";

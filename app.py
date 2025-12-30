@@ -78,7 +78,14 @@ def make_move(move: MoveRequest, request: Request, session_id: Optional[str] = C
         # Check winner immediately
         winner = game.winner()
         if winner is not None:
-             return {"status": "game_over", "winner": "human" if winner == 0 else "ai"}
+             # 0: Human, 1: AI, 2: Human (Stalemate), 3: AI (Stalemate), -1: Tie
+             if winner == 0: w_str = "human"
+             elif winner == 1: w_str = "ai"
+             elif winner == 2: w_str = "human_stalemate"
+             elif winner == 3: w_str = "ai_stalemate"
+             else: w_str = "draw"
+             
+             return {"status": "game_over", "winner": w_str}
              
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -98,7 +105,13 @@ def trigger_ai(request: Request, session_id: Optional[str] = Cookie(None)):
          pass
          
     if game.winner() is not None:
-        return {"status": "game_over", "winner": "human" if game.winner() == 0 else "ai"}
+        winner = game.winner()
+        if winner == 0: w_str = "human"
+        elif winner == 1: w_str = "ai"
+        elif winner == 2: w_str = "human_stalemate"
+        elif winner == 3: w_str = "ai_stalemate"
+        else: w_str = "draw"
+        return {"status": "game_over", "winner": w_str}
 
     try:
         # AI finds move
@@ -107,9 +120,17 @@ def trigger_ai(request: Request, session_id: Optional[str] = Cookie(None)):
         game.apply_move(move)
         game.next_turn()
         
+        # Helper to map winner
+        winnerCode = game.winner()
+        if winnerCode == 0: ws = "human"
+        elif winnerCode == 1: ws = "ai"
+        elif winnerCode == 2: ws = "human_stalemate"
+        elif winnerCode == 3: ws = "ai_stalemate"
+        else: ws = "draw"
+        
         return {
             "ai_move_made": move,
-            "winner": game.winner()
+            "winner": ws if winnerCode is not None else None
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -129,14 +150,6 @@ def new_game(config: GameConfig, response: Response, session_id: Optional[str] =
 @app.post("/api/reset")
 def reset_game(response: Response, session_id: Optional[str] = Cookie(None)):
     if session_id and session_id in games:
-        # Keep same difficulty? We need to store it or default to 5
-        # For simple reset, lets stick to default 5 or reuse existing attr if we had it
-        # Actually, let's just make reset restart the CURRENT game logic
-        # But Game class init resets state. 
-        # We should probably store depth in Game instance? 
-        # stick.py Player doesn't store depth. AI.py does.
-        # AI(difficulty) sets self.DEPTH
-        # Let's peek at existing game's AI depth
         old_game = games[session_id]
         depth = old_game.ai.DEPTH if hasattr(old_game.ai, 'DEPTH') else 5
         games[session_id] = Game(vs_ai=True, depth=depth)
