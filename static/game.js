@@ -53,6 +53,17 @@ function updateUI(data) {
     // Update Status
     const statusLbl = document.getElementById('status-bar');
     const subLbl = document.getElementById('sub-status');
+    const diffLbl = document.getElementById('difficulty-display');
+
+    if (diffLbl && data.difficulty) {
+        let label = data.difficulty;
+        if (label === 10) label = "Impossible";
+        else if (label === 7) label = "Impossible (Legacy)";
+        else if (label === 5) label = "Hard";
+        else if (label === 3) label = "Medium";
+        else if (label === 1) label = "Easy";
+        diffLbl.textContent = `Difficulty: ${label}`;
+    }
 
     if (data.winner !== null) {
         gameOver = true;

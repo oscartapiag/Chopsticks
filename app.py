@@ -61,7 +61,8 @@ def get_state(request: Request, response: Response, session_id: Optional[str] = 
         "human_hands": [game.left(0), game.right(0)],
         "ai_hands": [game.left(1), game.right(1)],
         "turn": "human" if game.turn == 0 else "ai",
-        "winner": w_str
+        "winner": w_str,
+        "difficulty": game.ai.DEPTH if hasattr(game.ai, 'DEPTH') else 5
     }
 
 @app.post("/api/move")
