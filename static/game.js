@@ -183,7 +183,7 @@ async function sendMove(m0, m1) {
 
         if (!res.ok) {
             log(`Invalid move: ${json.detail}`);
-            alert(`Error: ${json.detail}`);
+            // alert(`Error: ${json.detail}`);
             // Don't deselect, let user retry
         } else {
             if (m0 === 's') {
@@ -235,7 +235,7 @@ async function triggerAIMove() {
         console.error(e);
         log(`AI Error: ${e.message}`);
         // Reset state/poll again just in case? Or alert?
-        alert(`AI Move Failed: ${e.message}. See Console.`);
+        // alert(`AI Move Failed: ${e.message}. See Console.`);
         fetchState(); // Attempt to resync
     }
 }
