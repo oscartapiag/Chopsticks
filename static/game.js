@@ -19,6 +19,8 @@ let gameState = {
 let selectedHand = null; // 'l' or 'r'
 let gameOver = false;
 
+
+
 document.addEventListener('DOMContentLoaded', () => {
     log("Game Started.");
     fetchState();
@@ -30,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchState() {
     try {
-        const res = await fetch(`${API_BASE}/state`);
+        const res = await fetch(`${API_BASE}/state?t=${Date.now()}`);
         const data = await res.json();
         updateUI(data);
     } catch (e) {
@@ -40,6 +42,7 @@ async function fetchState() {
 
 function updateUI(data) {
     gameState = data;
+    // log(`UpdateUI: Turn=${data.turn} Winner=${data.winner}`);
 
     // Draw Hands
     drawHand('cv-human-l', data.human_hands[0], true, selectedHand === 'l');
@@ -56,6 +59,13 @@ function updateUI(data) {
         if (data.winner === 0) {
             statusLbl.textContent = "YOU WIN!";
             statusLbl.style.color = COLORS.select;
+            // ...
+        } else {
+            // Game is running
+            gameOver = false;
+        }
+
+        if (data.turn === 'human') {
             subLbl.textContent = "Congratulations!";
         } else if (data.winner === 1 || data.winner === 'ai') {
             statusLbl.textContent = "AI WINS";
@@ -96,7 +106,17 @@ function updateUI(data) {
 }
 
 async function handleCanvasClick(owner, side) {
-    if (gameState.turn !== 'human' || gameOver) return;
+    // console.log(`[Click] Owner: ${owner}, Side: ${side}, Turn: ${gameState.turn}, GameOver: ${gameOver}, Selected: ${selectedHand}`);
+
+    if (gameOver) {
+        console.warn("Click ignored: Game Over");
+        return;
+    }
+
+    if (gameState.turn !== 'human') {
+        console.warn("Click ignored: Not human turn");
+        return;
+    }
 
     if (selectedHand === null) {
         // Selection State
@@ -110,16 +130,19 @@ async function handleCanvasClick(owner, side) {
             return;
         }
         selectedHand = side;
+        console.log(`[Selection] Selected hand: ${selectedHand}`);
         // Just refresh UI to show selection
         fetchState();
     } else {
         // Action State
         const source = selectedHand;
         const target = side;
+        console.log(`[Action] Source: ${source}, Target: ${target}, Owner: ${owner}`);
 
         if (owner === 'human') {
             if (source === target) {
                 // Deselect
+                console.log("[Action] Deselecting");
                 selectedHand = null;
                 fetchState();
             } else {
@@ -152,17 +175,22 @@ async function sendMove(m0, m1) {
 
     const payload = { m0, m1 };
 
+
+
     try {
         const res = await fetch(`${API_BASE}/move`, {
             method: 'POST',
+
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+
 
         const json = await res.json();
 
         if (!res.ok) {
             log(`Invalid move: ${json.detail}`);
+            alert(`Error: ${json.detail}`);
             // Don't deselect, let user retry
         } else {
             if (m0 === 's') {
@@ -175,13 +203,25 @@ async function sendMove(m0, m1) {
         }
     } catch (e) {
         console.error(e);
+        log(`Network Error: ${e.message}`);
     }
 }
 
 async function triggerAIMove() {
     try {
         const res = await fetch(`${API_BASE}/ai_move`, { method: 'POST' });
+
+
         const data = await res.json();
+
+        if (!res.ok) {
+            console.warn("AI Move failed:", data);
+            // If backend says not AI turn, or other error, we should resync.
+            log(`Syncing... (Backend says: ${data.detail})`);
+            fetchState();
+            return;
+        }
+
         if (data.status === 'game_over') {
             fetchState(); // will handle winner
             return;
@@ -200,6 +240,10 @@ async function triggerAIMove() {
         fetchState();
     } catch (e) {
         console.error(e);
+        log(`AI Error: ${e.message}`);
+        // Reset state/poll again just in case? Or alert?
+        alert(`AI Move Failed: ${e.message}. See Console.`);
+        fetchState(); // Attempt to resync
     }
 }
 

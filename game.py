@@ -63,6 +63,5 @@ class Game:
     def checkStalemate(self):
         if not self.history: return False
         current_state = self.history[-1]
-        # Only look at the last 16 moves (approx 4 moves/loop * 3 reps + buffer)
-        recent_history = self.history[-16:]
+        recent_history = self.history[-12:]
         return recent_history.count(current_state) >= 3

@@ -41,13 +41,27 @@ def get_state(request: Request, response: Response, session_id: Optional[str] = 
         session_id = str(uuid.uuid4())
         response.set_cookie(key="session_id", value=session_id)
     
+        response.set_cookie(key="session_id", value=session_id)
+    
+    # Disable Caching
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+
     game = get_game(session_id)
     
+    winner = game.winner()
+    w_str = None
+    if winner is not None:
+        if winner == 0: w_str = "human"
+        elif winner == 1: w_str = "ai"
+        elif winner == 2: w_str = "human_stalemate"
+        elif winner == 3: w_str = "ai_stalemate"
+        else: w_str = "draw"
+
     return {
         "human_hands": [game.left(0), game.right(0)],
         "ai_hands": [game.left(1), game.right(1)],
         "turn": "human" if game.turn == 0 else "ai",
-        "winner": game.winner()
+        "winner": w_str
     }
 
 @app.post("/api/move")
@@ -102,7 +116,7 @@ def trigger_ai(request: Request, session_id: Optional[str] = Cookie(None)):
     if game.turn != 1:
          # It might still be human turn if they clicked fast? 
          # Or maybe the frontend is polling.
-         pass
+         raise HTTPException(status_code=400, detail="Not AI turn")
          
     if game.winner() is not None:
         winner = game.winner()
@@ -114,7 +128,6 @@ def trigger_ai(request: Request, session_id: Optional[str] = Cookie(None)):
         return {"status": "game_over", "winner": w_str}
 
     try:
-        # AI finds move
         move = game.ai_move()
         # AI makes move
         game.apply_move(move)
