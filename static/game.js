@@ -56,18 +56,11 @@ function updateUI(data) {
 
     if (data.winner !== null) {
         gameOver = true;
-        if (data.winner === 0) {
+        if (data.winner === 'human' || data.winner === 0) {
             statusLbl.textContent = "YOU WIN!";
             statusLbl.style.color = COLORS.select;
-            // ...
-        } else {
-            // Game is running
-            gameOver = false;
-        }
-
-        if (data.turn === 'human') {
             subLbl.textContent = "Congratulations!";
-        } else if (data.winner === 1 || data.winner === 'ai') {
+        } else if (data.winner === 'ai' || data.winner === 1) {
             statusLbl.textContent = "AI WINS";
             statusLbl.style.color = COLORS.ai;
             subLbl.textContent = "Better luck next time.";
@@ -79,7 +72,7 @@ function updateUI(data) {
             statusLbl.textContent = "AI WINS (BY RULES)";
             statusLbl.style.color = COLORS.ai;
             subLbl.textContent = "Loop detected. AI had more fingers.";
-        } else if (data.winner === -1 || data.winner === 'draw') {
+        } else if (data.winner === 'draw' || data.winner === -1) {
             statusLbl.textContent = "GAME TIED";
             statusLbl.style.color = COLORS.finger;
             subLbl.textContent = "Both players have equal fingers in loop.";
